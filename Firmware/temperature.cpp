@@ -1,4 +1,8 @@
 /*
+
+  REMEMBER to change the configuration_prusa header with the MK3S version
+  in the Firmware/versions folder
+
   temperature.c - temperature control
   Part of Marlin
   
@@ -526,7 +530,7 @@ void setExtruderAutoFanState(uint8_t state)
 	if (fanState & 0x01)
 	{
 #ifdef EXTRUDER_ALTFAN_DETECT
-		if (altfanStatus.isAltfan && !altfanStatus.altfanOverride) newFanSpeed = EXTRUDER_ALTFAN_SPEED_SILENT;
+		if (altfanStatus.isAltfan && !altfanStatus.altfanOverride) newFanSpeed = EXTRUDER_ALTFAN_SPEED_SILENT; // This Whole altfan debockle seems to come down to running at 50% if not noctua fan. which i dont have btw
 		else newFanSpeed = EXTRUDER_AUTO_FAN_SPEED;
 #else //EXTRUDER_ALTFAN_DETECT
 		newFanSpeed = EXTRUDER_AUTO_FAN_SPEED;
@@ -565,8 +569,8 @@ void checkFanSpeed()
   if(fans_check_enabled != false)
 	  fans_check_enabled = (eeprom_read_byte((uint8_t*)EEPROM_FAN_CHECK_ENABLED) > 0);
 	static unsigned char fan_speed_errors[2] = { 0,0 };
-#if (defined(FANCHECK) && defined(TACH_0) && (TACH_0 >-1))
-	if ((fan_speed[0] < 20) && (current_temperature[0] > EXTRUDER_AUTO_FAN_TEMPERATURE)){ fan_speed_errors[0]++;}
+#if (defined(FANCHECK) && defined(TACH_0) && (TACH_0 >-1)) // I AM ASSUMING FAN 0 IS THE HOTEND COOLING FAN-> IE TACH0 BELONGS TO THAT
+	if ((fan_speed[0] < 20) && (current_temperature[0] > EXTRUDER_AUTO_FAN_TEMPERATURE)){ fan_speed_errors[0]++;} // extruder fan, is 20 in percent or in hundreds, wonder how a pump tacho will influence this reading...
 	else{
     fan_speed_errors[0] = 0;
     host_keepalive();
@@ -1040,11 +1044,11 @@ static void updateTemperaturesFromRawValues()
 
 #ifdef PINDA_THERMISTOR
 	current_temperature_raw_pinda = (uint16_t)((uint32_t)current_temperature_raw_pinda * 3 + current_temperature_raw_pinda_fast) >> 2;
-	current_temperature_pinda = analog2tempBed(current_temperature_raw_pinda);
+	current_temperature_pinda = analog2tempBed(current_temperature_raw_pinda); // if getting in trouble with checks based on pinda temp wrt superpinda maybe write to ambient here instead
 #endif
 
 #ifdef AMBIENT_THERMISTOR
-	current_temperature_ambient = analog2tempAmbient(current_temperature_raw_ambient); //thermistor for ambient is NTCG104LH104JT1 (2000)
+	current_temperature_ambient = current_temperature_pinda; //thermistor for ambient is NTCG104LH104JT1 (2000)
 #endif
    
 #ifdef DEBUG_HEATER_BED_SIM
@@ -2338,7 +2342,7 @@ bool has_temperature_compensation()
     if (pinda_temp_compensation == EEPROM_EMPTY_VALUE) //Unkown PINDA temp compenstation, so check it.
       {
 #endif //PINDA_TEMP_COMP
-        return (current_temperature_pinda >= PINDA_MINTEMP) ? true : false;
+        return (current_temperature_pinda >= PINDA_MINTEMP) ? false : false; // Using current_temperature_pinda for ambient reading not for compensation. Using superpinda
 #ifdef PINDA_TEMP_COMP
       }
     else if (pinda_temp_compensation == 0) return true; //Overwritten via LCD menu SuperPINDA [No]
