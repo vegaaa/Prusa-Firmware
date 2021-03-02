@@ -2256,7 +2256,7 @@ bool calibrate_z_auto()
 		current_position[Z_AXIS] = Z_MAX_POS + 2.0;
 	}
 	else {
-		current_position[Z_AXIS] = Z_MAX_POS + 9.0;
+		current_position[Z_AXIS] = Z_MAX_POS + 2.0;
 	}
 	plan_set_position_curposXYZE();
 	return true;
